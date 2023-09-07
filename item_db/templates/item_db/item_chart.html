@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Item Auction Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment"></script>
+</head>
+<body>
+    <div>
+        <canvas id="itemChart"></canvas>
+    </div>
+      
+    <script>
+        const ctx = document.getElementById('itemChart').getContext('2d');
+        const timestamps = JSON.parse('{{ timestamps|safe }}');
+        const buyout_prices = JSON.parse('{{ buyout_prices|safe }}');
+        const quantities = JSON.parse('{{ quantity|safe }}');
+
+        const dataPoints = timestamps.map((timestamp, index) => ({
+            x: timestamp,
+            y: buyout_prices[index],
+            r: quantities[index]
+        }));
+
+        const singleItems = dataPoints.filter(dp => dp.r === 1);
+        const totalSingleItemPrices = singleItems.reduce((acc, dp) => acc + dp.y, 0);
+        const singleItemAverage = totalSingleItemPrices / singleItems.length;
+
+        // Threshold based on 200% of single item average
+        const threshold = 2 * singleItemAverage;
+
+        console.log("Single Item Average:", singleItemAverage);
+        console.log("Threshold:", threshold);
+
+        const outliers = dataPoints.filter(dp => dp.y/dp.r > threshold);
+        const filteredDataPoints = dataPoints.filter(dp => dp.y/dp.r <= threshold);
+
+        console.log("Outliers:", outliers);
+        console.log("Filtered Data Points:", filteredDataPoints);
+
+
+        new Chart(ctx, {
+            type: 'bubble',
+            data: {
+                datasets: [{
+                    label: 'Buyout Prices',
+                    data: filteredDataPoints,
+                    backgroundColor: 'rgb(255, 99, 132)'
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'month'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

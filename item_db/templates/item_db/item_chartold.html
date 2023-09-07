@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Item Auction Data</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <canvas id="itemChart" width="400" height="200"></canvas>
+    <script>
+        // JavaScript code to generate the chart
+        var ctx = document.getElementById('itemChart').getContext('2d');
+
+        // Use JSON.parse() to convert the serialized string back to a JS object/list
+        var timestamps = JSON.parse('{{ timestamps|safe }}');
+        var buyout_prices = JSON.parse('{{ buyout_prices|safe }}');
+        var item_name = "{{ item_name }}";
+
+        var myChart = new Chart(ctx, {
+            type: 'line', // or other chart type
+            data: {
+                labels: timestamps,
+                datasets: [{
+                    label: 'Buyout Price',
+                    data: buyout_prices,
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                title: {
+                    display: true,
+                    text: 'Auction Data for ' + item_name
+                },
+                scales: {
+                    xAxes: [{
+                        type: 'time',
+                        time: {
+                            displayFormats: {
+                                hour: 'MMM D hA'
+                            }
+                        }
+                    }],
+                    yAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Buyout Price'
+                        }
+                    }]
+                }
+            }
+        });
+    </script>
+</body>
+</html>

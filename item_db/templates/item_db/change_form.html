@@ -1,0 +1,21 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block content %}
+    {{ chart_html|safe }}
+    <form method="post" id="{{ opts.pk.name }}_form" novalidate>{% csrf_token %}
+        <div>
+            {% if original %}
+                <h1>{% blocktrans with name=opts.verbose_name %}Change {{ name }}{% endblocktrans %}</h1>
+            {% else %}
+                <h1>{% blocktrans with name=opts.verbose_name %}Add {{ name }}{% endblocktrans %}</h1>
+            {% endif %}
+        </div>
+        <div class="inline-group" id="tabular-inline-related">
+            {% for inline_admin_formset in inline_admin_formsets %}
+                {% include inline_admin_formset.opts.template %}
+            {% endfor %}
+        </div>
+        <input type="submit" value="{% trans 'Save' %}">
+    </form>
+{% endblock %}
