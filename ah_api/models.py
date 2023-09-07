@@ -1,5 +1,21 @@
 from django.db import models
+import datetime
 from item_db.models import Item
+from django.utils import timezone
+
+
+class AccessToken(models.Model):
+    access_token = models.CharField(max_length=255)
+    token_type = models.CharField(max_length=50)
+    expires_in = models.PositiveIntegerField()  # in seconds
+    timestamp = models.DateTimeField(auto_now_add=True)  # when the token was stored
+
+    @property
+    def is_valid(self):
+        """Check if token is still valid"""
+        token_age = timezone.now() - self.timestamp
+        return token_age < datetime.timedelta(seconds=self.expires_in)
+
 
 class Auction(models.Model):
     auction_id = models.BigIntegerField(primary_key=True, verbose_name="Auction ID")
