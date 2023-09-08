@@ -13,53 +13,60 @@
       
     <script>
         const ctx = document.getElementById('itemChart').getContext('2d');
-        const timestamps = JSON.parse('{{ timestamps|safe }}');
-        const buyout_prices = JSON.parse('{{ buyout_prices|safe }}');
-        const quantities = JSON.parse('{{ quantity|safe }}');
+const timestamps = JSON.parse('{{ timestamps|safe }}');
+const buyout_prices = JSON.parse('{{ buyout_prices|safe }}');
+const quantities = JSON.parse('{{ quantity|safe }}');
 
-        const dataPoints = timestamps.map((timestamp, index) => ({
-            x: timestamp,
-            y: buyout_prices[index],
-            r: quantities[index]
-        }));
+const dataPoints = timestamps.map((timestamp, index) => ({
+    x: timestamp,
+    y: buyout_prices[index]/quantities[index],
+    r: 1
+}));
 
-        const singleItems = dataPoints.filter(dp => dp.r === 1);
-        const totalSingleItemPrices = singleItems.reduce((acc, dp) => acc + dp.y, 0);
-        const singleItemAverage = totalSingleItemPrices / singleItems.length;
+// Sort the data points by their buyout prices
+const sortedPrices = dataPoints.map(dp => dp.y).sort((a, b) => a - b);
 
-        // Threshold based on 200% of single item average
-        const threshold = 2 * singleItemAverage;
+// Calculate the median
+const median = sortedPrices.length % 2 === 0 ?
+    (sortedPrices[sortedPrices.length / 2 - 1] + sortedPrices[sortedPrices.length / 2]) / 2 :
+    sortedPrices[Math.floor(sortedPrices.length / 2)];
 
-        console.log("Single Item Average:", singleItemAverage);
-        console.log("Threshold:", threshold);
+// Calculate upper and lower bounds based on 300% of the median
+const upperThreshold = 3 * median;
+const lowerThreshold = median / 3;
 
-        const outliers = dataPoints.filter(dp => dp.y/dp.r > threshold);
-        const filteredDataPoints = dataPoints.filter(dp => dp.y/dp.r <= threshold);
+console.log("Median Price:", median);
+console.log("Upper Threshold:", upperThreshold);
+console.log("Lower Threshold:", lowerThreshold);
 
-        console.log("Outliers:", outliers);
-        console.log("Filtered Data Points:", filteredDataPoints);
+// Filter data points outside the upper and lower bounds.
+const outliers = dataPoints.filter(dp => dp.y > upperThreshold || dp.y < lowerThreshold);
+const filteredDataPoints = dataPoints.filter(dp => dp.y <= upperThreshold && dp.y >= lowerThreshold);
 
+console.log("Outliers:", outliers);
+console.log("Filtered Data Points:", filteredDataPoints);
 
-        new Chart(ctx, {
-            type: 'bubble',
-            data: {
-                datasets: [{
-                    label: 'Buyout Prices',
-                    data: filteredDataPoints,
-                    backgroundColor: 'rgb(255, 99, 132)'
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        type: 'time',
-                        time: {
-                            unit: 'month'
-                        }
-                    }
+new Chart(ctx, {
+    type: 'bubble',
+    data: {
+        datasets: [{
+            label: 'Buyout Prices',
+            data: filteredDataPoints,
+            backgroundColor: 'rgb(255, 99, 132)'
+        }]
+    },
+    options: {
+        scales: {
+            x: {
+                type: 'time',
+                time: {
+                    unit: 'month'
                 }
             }
-        });
+        }
+    }
+});
+
     </script>
 </body>
 </html>
